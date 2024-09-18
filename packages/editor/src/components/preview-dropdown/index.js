@@ -20,6 +20,7 @@ import { desktop, mobile, tablet, external } from '@wordpress/icons';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
 import { store as preferencesStore } from '@wordpress/preferences';
+import { store as blockEditorStore } from '@wordpress/block-editor';
 import { ActionItem } from '@wordpress/interface';
 
 /**
@@ -44,6 +45,7 @@ export default function PreviewDropdown( { forceIsAutosaveable, disabled } ) {
 			};
 		}, [] );
 	const { setDeviceType } = useDispatch( editorStore );
+	const { __unstableSetEditorMode } = useDispatch( blockEditorStore );
 
 	const isMobile = useViewportMatch( 'medium', '<' );
 	if ( isMobile ) {
@@ -94,6 +96,24 @@ export default function PreviewDropdown( { forceIsAutosaveable, disabled } ) {
 		},
 	];
 
+	const zoomOutExperimentEnabled =
+		window.__experimentalEnableZoomOutExperiment;
+
+	/**
+	 * Handles the selection of a device type from preview dropdown.
+	 *
+	 * If the zoom out experiment is enabled, it turns off the zoom out mode
+	 * before setting the device type.
+	 *
+	 * @param {string} newDeviceType The selected device type.
+	 */
+	const handleDeviceTypeSelect = ( newDeviceType ) => {
+		if ( zoomOutExperimentEnabled ) {
+			__unstableSetEditorMode( 'edit' ); // Turn off zoom out mode.
+		}
+		setDeviceType( newDeviceType );
+	};
+
 	return (
 		<DropdownMenu
 			className={ clsx(
@@ -113,7 +133,7 @@ export default function PreviewDropdown( { forceIsAutosaveable, disabled } ) {
 						<MenuItemsChoice
 							choices={ choices }
 							value={ deviceType }
-							onSelect={ setDeviceType }
+							onSelect={ handleDeviceTypeSelect }
 						/>
 					</MenuGroup>
 					{ isTemplate && (
